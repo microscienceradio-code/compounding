@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-ink-900 text-paper-100 font-sans antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display font-semibold text-paper-100;
+  }
+  ::selection {
+    @apply bg-moss-600 text-paper-100;
+  }
+  input, textarea, select {
+    @apply bg-ink-800 border border-ink-700 rounded-sm px-3 py-2 text-paper-100 placeholder-paper-300/50 outline-none;
+  }
+  input:focus, textarea:focus, select:focus {
+    @apply border-moss-500 ring-1 ring-moss-500;
+  }
+  input[type="checkbox"] {
+    @apply w-5 h-5 accent-moss-500;
+  }
+  button:focus-visible, a:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-moss-400;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-800 border border-ink-700 rounded-lg p-5;
+  }
+  .btn-primary {
+    @apply bg-moss-600 hover:bg-moss-500 text-paper-100 font-medium rounded px-4 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-transparent border border-ink-700 hover:border-paper-300 text-paper-100 font-medium rounded px-4 py-2 transition-colors disabled:opacity-40;
+  }
+  .field-label {
+    @apply block text-sm text-paper-300 mb-1;
+  }
+  .stat-number {
+    @apply font-mono tabular-nums;
+  }
+}
