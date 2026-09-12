@@ -21,7 +21,8 @@ export default function LedgerPage() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const [{ data: entryRows }, { data: totalRow }] = await Promise.all([
+    setError(null)
+    const [{ data: entryRows, error: entriesError }, { data: totalRow, error: totalsError }] = await Promise.all([
       supabase
         .from('ledger_entries')
         .select('*')
@@ -35,6 +36,14 @@ export default function LedgerPage() {
         .eq('week_start', weekStart)
         .maybeSingle(),
     ])
+    if (entriesError) {
+      console.error('ledger_entries select failed:', entriesError)
+      setError(`Could not load entries: ${entriesError.message}`)
+    }
+    if (totalsError) {
+      console.error('weekly_ledger select failed:', totalsError)
+      setError(`Could not load weekly totals: ${totalsError.message}`)
+    }
     setEntries((entryRows as LedgerEntry[]) ?? [])
     setTotals((totalRow as WeeklyLedgerTotals) ?? null)
   }, [user, weekStart])
@@ -67,7 +76,12 @@ export default function LedgerPage() {
   }
 
   async function handleDelete(id: string) {
-    await supabase.from('ledger_entries').delete().eq('id', id)
+    const { error } = await supabase.from('ledger_entries').delete().eq('id', id)
+    if (error) {
+      console.error('ledger_entries delete failed:', error)
+      setError(`Could not remove entry: ${error.message}`)
+      return
+    }
     await load()
   }
 
