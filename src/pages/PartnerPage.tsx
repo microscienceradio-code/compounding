@@ -23,17 +23,26 @@ export default function PartnerPage() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error: partnershipsError } = await supabase
       .from('partnerships')
       .select('*')
       .or(`requester_id.eq.${user.id},partner_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
 
+    if (partnershipsError) {
+      console.error('partnerships select failed:', partnershipsError)
+      setError(`Could not load partnerships: ${partnershipsError.message}`)
+      return
+    }
+
     const rows = (data as Partnership[]) ?? []
     const withNames: PartnershipView[] = await Promise.all(
       rows.map(async (p) => {
         if (!p.partner_id) return { ...p, otherName: null }
-        const { data: name } = await supabase.rpc('get_partnership_display_name', { partnership_id: p.id })
+        const { data: name, error: nameError } = await supabase.rpc('get_partnership_display_name', {
+          partnership_id: p.id,
+        })
+        if (nameError) console.error('get_partnership_display_name failed:', nameError)
         return { ...p, otherName: (name as string) ?? null }
       })
     )
@@ -43,15 +52,22 @@ export default function PartnerPage() {
     if (accepted) {
       const otherId = accepted.requester_id === user.id ? accepted.partner_id : accepted.requester_id
       if (otherId) {
-        const { data: summaryRows } = await supabase.rpc('get_partner_summary', { target_user: otherId })
+        const { data: summaryRows, error: summaryError } = await supabase.rpc('get_partner_summary', {
+          target_user: otherId,
+        })
+        if (summaryError) {
+          console.error('get_partner_summary failed:', summaryError)
+          setError(`Could not load partner summary: ${summaryError.message}`)
+        }
         setSummary((summaryRows as PartnerSummaryRow[]) ?? [])
       }
-      const { data: messageRows } = await supabase
+      const { data: messageRows, error: messagesError } = await supabase
         .from('partner_messages')
         .select('*')
         .eq('partnership_id', accepted.id)
         .order('created_at', { ascending: true })
         .limit(50)
+      if (messagesError) console.error('partner_messages select failed:', messagesError)
       setMessages((messageRows as PartnerMessage[]) ?? [])
     } else {
       setSummary([])
